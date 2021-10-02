@@ -89,7 +89,7 @@ link_web <- function(x, id = NULL) {
 }
 
 
-plot_f <- function(bugs){
+plot_component_core <- function(bugs){
     library("ggplot2")
     bugs %>%
         group_by(r_core, component_id) %>%
@@ -100,4 +100,31 @@ plot_f <- function(bugs){
         scale_fill_viridis_c() +
         theme_minimal() +
         labs(x = "R Core?", y = "Component", fill = "Issues")
+}
+
+
+plot_status_version <- function(bugs){
+    library("ggplot2")
+    bugs %>%
+        group_by(bug_status, version) %>%
+        count() %>%
+        ungroup() %>%
+        ggplot() +
+        geom_tile(aes(bug_status, version, fill = n)) +
+        scale_fill_viridis_c() +
+        theme_minimal() +
+        labs(x = "Status", y = "Version", fill = "Issues")
+}
+
+plot_system_attachment <- function(bugs){
+    library("ggplot2")
+    bugs %>%
+        group_by(op_sys, has_attachment) %>%
+        count() %>%
+        ungroup() %>%
+        ggplot() +
+        geom_tile(aes(has_attachment, op_sys, fill = n)) +
+        scale_fill_viridis_c() +
+        theme_minimal() +
+        labs(x = "Has attachment?", y = "OS", fill = "Issues")
 }
