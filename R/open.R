@@ -26,7 +26,7 @@ open_bugs <- function() {
         collect() %>%
         group_by(bug_id) %>%
         summarize(r_core = ifelse(any(who %in% r_core), "yes", "no"),
-                  total_comments = n() -1,
+                  total_comments = n() - 1,
                   people = sum(who != 2))
 
     db_attachments <- db_bugzilla %>%
@@ -43,6 +43,7 @@ open_bugs <- function() {
     component_names <- c("2" = "Accuracy",
                          "3" = "Analyses",
                          "4" = "Graphics",
+                         "5" = "Installation",
                          "6" = "Low-level",
                          "8" = "S4methods",
                          "7" = "Misc",
@@ -59,17 +60,22 @@ open_bugs <- function() {
                          "19" = "Windows GUI / Window specific"
     )
 
+    if (any(!as.character(dbb$component_id) %in% names(component_names))) {
+        warning("Please report it that some components aren't known")
+    }
+
     dbDisconnect(db_bugzilla)
     dbb <- dbb %>% mutate(creation_ts = as.POSIXct(creation_ts, tz = "UTC", format = "%Y-%m-%d %H:%M:%OS"),
                           delta_ts = as.POSIXct(delta_ts, tz = "UTC", format = "%Y-%m-%d %H:%M:%OS")) %>%
         rowwise() %>%
         mutate(last_changed = max(creation_ts, delta_ts, na.rm = TRUE)) %>%
         ungroup() %>%
-        select(-creation_ts, -delta_ts) %>%
-        mutate(component_id = component_names[as.character(component_id)])
+        mutate(component_id = component_names[as.character(component_id)],
+               opened = format(creation_ts, "%Y-%m-%d"),
+               last_changed = format(last_changed, "%Y-%m-%d %H:%M")) %>%
+        select(-creation_ts, -delta_ts)
     as.data.frame(dbb)
 }
-
 
 link_web <- function(x, id = NULL) {
     stopifnot(is.numeric(x))
@@ -78,5 +84,20 @@ link_web <- function(x, id = NULL) {
     }
 
     # paste0("[", x, "](https://bugs.r-project.org/show_bug.cgi?id=", id, ")")
-    paste0('<a href="https://bugs.r-project.org/show_bug.cgi?id=', id, '">', x, '</a>')
+    paste0('<a href="https://bugs.r-project.org/show_bug.cgi?id=', id,
+           '">', x, '</a>')
+}
+
+
+plot_f <- function(bugs){
+    library("ggplot2")
+    bugs %>%
+        group_by(r_core, component_id) %>%
+        count() %>%
+        ungroup() %>%
+        ggplot() +
+        geom_tile(aes(r_core, component_id, fill = n)) +
+        scale_fill_viridis_c() +
+        theme_minimal() +
+        labs(x = "R Core?", y = "Component", fill = "Issues")
 }

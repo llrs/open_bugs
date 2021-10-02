@@ -1,6 +1,17 @@
 library(shiny)
 
+last_dump <- "2021-03-25"
+
 ui <- fluidPage(
+    "Last time this was updated was:",
+    last_dump,
+    "\n",
+    dateRangeInput("period", "Bugs within these dates",
+                   start = "2012-07-22",
+                   min = "2012-07-22",
+                   end = last_dump,
+                   max = last_dump,
+                   weekstart = 1),
     dataTableOutput("bugs")
 )
 
