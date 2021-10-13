@@ -100,6 +100,7 @@ link_web <- function(x, id = NULL) {
 
 plot_component_core <- function(bugs){
     library("ggplot2")
+    library("plotly")
     bugs |>
         group_by(r_core, component_id) |>
         count() |>
